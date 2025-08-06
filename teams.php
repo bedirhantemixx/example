@@ -3,12 +3,13 @@
 $page_title = "Takım Yönetimi";
 
 require_once 'admin_header.php';
+require_once 'config.php';
 
 require_once 'admin_sidebar.php';
 
 
 
-$pdo = new PDO("mysql:unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock;dbname=frc_rookieverse;charset=utf8mb4", "root", "root");
+$pdo = get_db_connection();
 
 $teams = $pdo->query("SELECT id, team_number, team_id_generated, team_name FROM teams ORDER BY team_number ASC")->fetchAll(PDO::FETCH_ASSOC);
 

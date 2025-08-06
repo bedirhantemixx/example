@@ -2,6 +2,7 @@
 session_start();
 session_unset();
 session_destroy();
-header("Location: ../team-login.php");
+// Artık login.php'ye yönlendiriyor
+header("Location: login.php");
 exit();
 ?>

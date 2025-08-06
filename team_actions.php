@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'config.php';
 if (!isset($_SESSION['admin_logged_in'])) { exit('Yetkisiz erişim'); }
 
 // --- RASTGELE ID VE ŞİFRE OLUŞTURMA FONKSİYONLARI ---
@@ -19,7 +20,7 @@ function generatePassword($length = 8) {
     return str_shuffle($password);
 }
 
-$pdo = new PDO("mysql:unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock;dbname=frc_rookieverse;charset=utf8mb4", "root", "root");
+$pdo = get_db_connection();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];

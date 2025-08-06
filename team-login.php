@@ -1,4 +1,3 @@
-
 <?php
 // Session'ı başlat. Bu, sayfanın en başında olmalı.
 session_start();
