@@ -1,60 +1,62 @@
-<?php 
-$page_title = "Dashboard";
-require_once 'admin_header.php';
-require_once 'admin_sidebar.php';
+<?php
+session_start();
+if (!isset($_SESSION['team_logged_in'])) { header('Location: ../team-login.php'); exit(); }
+require_once '../config.php';
+$pdo = connectDB();
 
-$pdo = new PDO("mysql:unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock;dbname=frc_rookieverse;charset=utf8mb4", "root", "root");
-$total_teams = $pdo->query("SELECT count(*) FROM teams")->fetchColumn();
-$pending_approvals = $pdo->query("SELECT count(*) FROM courses WHERE status='pending'")->fetchColumn();
-$notification_count = $pending_approvals; 
+// Takıma ait kursları çek
+$stmt = $pdo->prepare("SELECT id, title, status FROM courses WHERE team_db_id = ? ORDER BY id DESC");
+$stmt->execute([$_SESSION['team_db_id']]);
+$courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$page_title = "Takım Paneli";
+require_once '../admin/admin_header.php'; // Tasarım için
 ?>
+
+<aside class="sidebar">
+    <div class="sidebar-header"><a href="panel.php"><span class="rookieverse">TAKIM PANELİ</span></a></div>
+    <div class="sidebar-profile">
+        <div class="icon"><i data-lucide="users"></i></div>
+        <h2>Hoş Geldin,</h2>
+        <p>Takım #<?php echo htmlspecialchars($_SESSION['team_number']); ?></p>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="panel.php" class="active"><i data-lucide="layout-dashboard"></i> Panelim</a>
+        <a href="create_course.php"><i data-lucide="plus-square"></i> Yeni Kurs Oluştur</a>
+        <a href="profile.php"><i data-lucide="settings"></i> Profilimi Düzenle</a>
+        <a href="logout.php" class="logout-link"><i data-lucide="log-out"></i> Güvenli Çıkış</a>
+    </nav>
+</aside>
 
 <main class="main-content">
     <div class="top-bar">
-        <div class="top-bar-actions">
-            <div class="top-bar-item">
-                <button id="notification-btn" class="top-bar-button relative">
-                    <i data-lucide="bell"></i>
-                    <?php if ($notification_count > 0): ?>
-                    <span class="notification-badge"><?php echo $notification_count; ?></span>
-                    <?php endif; ?>
-                </button>
-                <div id="notification-dropdown" class="dropdown-menu">
-                    <div class="p-2 font-bold border-b">Bildirimler</div>
-                    <?php if ($notification_count > 0): ?>
-                        <a href="approvals.php"><i data-lucide="check-square"></i><span><?php echo $notification_count; ?> yeni onay bekliyor.</span></a>
-                    <?php else: ?>
-                        <div class="p-4 text-center text-sm text-gray-500">Yeni bildirim yok.</div>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="top-bar-item">
-                <button id="profile-btn" class="top-bar-button"><i data-lucide="user-circle"></i></button>
-                <div id="profile-dropdown" class="dropdown-menu">
-                    <a href="#"><i data-lucide="users"></i> Kullanıcı Değiştir</a>
-                    <div class="dropdown-divider"></div>
-                    <a href="logout.php"><i data-lucide="log-out"></i> Güvenli Çıkış</a>
-                </div>
-            </div>
-        </div>
+        <div class="font-bold">Takım #<?php echo htmlspecialchars($_SESSION['team_number']); ?> Yönetim Paneli</div>
     </div>
-    
     <div class="content-area">
-        <div class="page-header">
-            <h1>Hoş geldin, <?php echo htmlspecialchars($_SESSION['admin_username']); ?>!</h1>
+        <div class="page-header"><h1>Panelim</h1></div>
+        <div class="card mb-6">
+            <a href="create_course.php" class="btn"><i data-lucide="plus"></i> Yeni Kurs Ekleme Talebi Oluştur</a>
         </div>
-        
-        <div class="stats-grid mb-8">
-            <div class="stat-card card"><div class="value"><?php echo $total_teams; ?></div><div class="label">Toplam Takım Sayısı</div></div>
-            <div class="stat-card card"><div class="value" style="color: red;"><?php echo $pending_approvals; ?></div><div class="label">Bekleyen Onay İşlemi</div></div>
-            <div class="stat-card card"><div class="value">12</div><div class="label">Son Eklenen Takım</div></div>
-        </div>
-
         <div class="card">
-            <h2>Son Aktiviteler</h2>
-            <p class="text-gray-500 mt-4">Burada son işlemlerin bir listesi görünecek.</p>
+            <h2>Kursların</h2>
+            <?php if (count($courses) > 0): ?>
+                <table>
+                    <thead><tr><th>Kurs Başlığı</th><th>Durum</th><th>İşlemler</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($courses as $course): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($course['title']); ?></td>
+                            <td><span class="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-800"><?php echo htmlspecialchars($course['status']); ?></span></td>
+                            <td><a href="view_curriculum.php?id=<?php echo $course['id']; ?>" class="btn btn-sm">İçeriği Yönet</a></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p>Henüz oluşturulmuş bir kursunuz bulunmuyor.</p>
+            <?php endif; ?>
         </div>
     </div>
 </main>
 
-<?php require_once 'admin_footer.php'; ?>
+<?php require_once '../admin/admin_footer.php'; ?>
